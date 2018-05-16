@@ -28,7 +28,7 @@ void initEspNow()
         ESP.restart();
     }
 
-    //esp_now_set_self_role(ESP_NOW_ROLE_COMBO);
+    esp_now_set_self_role(ESP_NOW_ROLE_COMBO);
     esp_now_register_recv_cb([](uint8_t *mac, uint8_t *data, uint8_t len) {
         Serial.println("received data from esp-now");
         Wire.beginTransmission(i2c_slave_address);
