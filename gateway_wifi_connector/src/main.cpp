@@ -1,53 +1,49 @@
-#include <ESP8266WiFi.h>
-#include <Wire.h>
+#define PJON_PACKET_MAX_LENGTH 250
+#include <PJON.h>
+#include <ArduinoJson.h>
 
-#define i2c_slave_address 88
+#define bus_pin 4 // pin for the bus
 
-void receiveEvent(int count)
+#define self_addr 0x31            //own address
+uint8_t bus_id[4] = {0, 0, 1, 5}; // pjon bus id
+
+PJON<SoftwareBitBang> bus(self_addr); // bus mode
+
+void receiver_function(uint8_t *payload, uint16_t length, const PJON_Packet_Info &packet_info)
 {
-    Serial.print("received message of #");
-    Serial.print(count);
-    Serial.println("bytes");
+  StaticJsonBuffer<200> jsonBuffer;
+  JsonObject &root = jsonBuffer.parseObject(payload);
 
-    byte mac[6];
-    byte message[250];
-    while (Wire.available())
-    {
-        int pos = 0;
-        for (int i = 0; i < 6; i++)
-        {
-            mac[pos++] = Wire.read();
-        }
+  const char *topic = root["topic"];
+  const char *_payload = root["payload"];
 
-        Serial.println("received mac address");
+  Serial.print("topic: ");
+  Serial.println(topic);
+  Serial.print("payload: ");
+  Serial.println(_payload);
 
-        int len = Wire.read();
-
-        Serial.print("received length of");
-        Serial.println(len);
-
-        pos = 0;
-        for (int i = 0; i < len; i++)
-        {
-            message[pos++] = Wire.read();
-        }
-        Serial.println("message read...");
-        String str = (char *)message;
-        Serial.println("message:");
-        Serial.println(str);
-    }
+  if (!root.success())
+  {
+    Serial.println("ArduinoJson parseObject() failed");
+  }
+  digitalWrite(2, HIGH);
+  delay(100);
+  digitalWrite(2, LOW);
 }
 
 void setup()
 {
-    Serial.begin(115200);
-    Serial.println("starting gateway wifi connector...");
-    Wire.begin(i2c_slave_address);
-    Serial.print("registered i2c address: ");
-    Serial.println(i2c_slave_address);
-    Wire.onReceive(receiveEvent);
-}
+  pinMode(2, OUTPUT);
+  digitalWrite(2, LOW); // Initialize LED 13 to be off
+
+  bus.strategy.set_pin(bus_pin);
+  bus.begin();
+  bus.set_receiver(receiver_function);
+
+  Serial.begin(74880);
+};
 
 void loop()
 {
-}
+  bus.receive();
+};
