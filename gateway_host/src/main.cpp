@@ -6,19 +6,23 @@
 #include <ArduinoJson.h>
 #include <PJON.h>
 
-#define bus_pin 4                                     // pin for the bus
-#define hb_interval 2000                              // heartbeat interval
-uint8_t mac[] = {0x36, 0x11, 0x22, 0x33, 0x44, 0x55}; // AP mac address
+#define bus_pin 4                                        // pin for the bus
+#define hb_interval 2000                                 // heartbeat interval
+uint8_t mac[] = {0x36, 0x11, 0x22, 0x33, 0x44, 0x55};    // AP mac address
+uint8_t c_mac1[] = {0x36, 0x11, 0x22, 0x33, 0x44, 0x56}; // Client 1 mac address
 
 #define target_addr 0x31          // target address
 #define self_addr 0x30            //own address
 uint8_t bus_id[4] = {0, 0, 1, 5}; // pjon bus id
 
+#define WIFI_CHANNEL 1
+
 PJON<SoftwareBitBang> bus(bus_id, self_addr); // bus mode
 
 void initVariant()
 {
-  WiFi.mode(WIFI_AP);                   // set wifi mode to AP
+  WiFi.mode(WIFI_AP); // set wifi mode to AP
+  WiFi.softAP("KNOWME", "Aa811ii1i181282939278218", WIFI_CHANNEL);
   wifi_set_macaddr(SOFTAP_IF, &mac[0]); // set custom mac
 }
 
@@ -30,12 +34,13 @@ void initEspNow()
     ESP.restart();
   }
 
-  esp_now_set_self_role(ESP_NOW_ROLE_COMBO); // slave and conroller
+  esp_now_set_self_role(ESP_NOW_ROLE_SLAVE); // slave
   esp_now_register_recv_cb([](uint8_t *mac, uint8_t *data, uint8_t len) {
     Serial.println("received data from esp-now");
     bus.send(target_addr, (char *)data, len); // send data to bus
   });
 
+  esp_now_add_peer(mac, (uint8_t)ESP_NOW_ROLE_CONTROLLER, (uint8_t)WIFI_CHANNEL, NULL, 0);
   Serial.println("Init ESP_Now done");
 }
 

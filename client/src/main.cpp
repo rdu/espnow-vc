@@ -1,15 +1,23 @@
 #include <ESP8266WiFi.h>
 #include <ArduinoJson.h>
 #include <espnow.h>
+#include "user_interface.h"
 
 #define topic "esp_test/state"
 
+uint8_t local_mac[] = {0x36, 0x11, 0x22, 0x33, 0x44, 0x56};
 uint8_t remoteMac[] = {0x36, 0x11, 0x22, 0x33, 0x44, 0x55};
 
-#define WIFI_CHANNEL 4
+#define WIFI_CHANNEL 1
 
 int interval;
 int startup;
+
+void initVariant()
+{
+    WiFi.mode(WIFI_STA);                        // set wifi mode to AP
+    wifi_set_macaddr(SOFTAP_IF, &local_mac[0]); // set custom mac
+}
 
 void setup()
 {
