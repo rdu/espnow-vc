@@ -66,18 +66,18 @@ void send_heartbeat()
   String payload;
   char buff[200];
 
-  StaticJsonBuffer<200> jsonBuffer;
-  StaticJsonBuffer<200> payloadBuffer;
+  StaticJsonBuffer<200> jsonBuffer;    // max message length 200
+  StaticJsonBuffer<200> payloadBuffer; //...
 
-  JsonObject &payload_root = payloadBuffer.createObject();
-  JsonObject &root = jsonBuffer.createObject();
-  payload_root["uptime"] = String(millis() - startup);
-  payload_root.printTo(payload);
-  root["topic"] = "epsnowgateway/heartbeat";
-  root["payload"] = payload;
-  root.printTo(json);
-  int length = json.length() + 1;
-  json.toCharArray(buff, length);
+  JsonObject &payload_root = payloadBuffer.createObject(); // create json object for payload
+  JsonObject &root = jsonBuffer.createObject();            // create json object for root
+  payload_root["uptime"] = String(millis() - startup);     // stamp uptime
+  payload_root.printTo(payload);                           // create payload string
+  root["topic"] = "epsnowgateway/heartbeat";               // set topic heartbeat
+  root["payload"] = payload;                               // set payload
+  root.printTo(json);                                      // create result string
+  int length = json.length() + 1;                          // ??? why is the lenght to small?
+  json.toCharArray(buff, length);                          // create char array
 
   Serial.print("len: #");
   Serial.println(String(json.length()));
@@ -85,7 +85,7 @@ void send_heartbeat()
   Serial.println(buff);
   Serial.print("message #2: ");
   Serial.println(json);
-  bus.send(target_addr, buff, length);
+  bus.send(target_addr, buff, length); // send message to bus
 }
 
 void loop()
@@ -98,5 +98,4 @@ void loop()
       send_heartbeat();
     }
   }
-  bus.update();
 };

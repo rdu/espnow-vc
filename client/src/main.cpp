@@ -1,13 +1,15 @@
 #include <ESP8266WiFi.h>
-
-extern "C"
-{
+#include <ArduinoJson.h>
 #include <espnow.h>
-}
+
+#define topic "esp_test/state"
 
 uint8_t remoteMac[] = {0x36, 0x11, 0x22, 0x33, 0x44, 0x55};
 
 #define WIFI_CHANNEL 4
+
+int interval;
+int startup;
 
 void setup()
 {
@@ -32,13 +34,46 @@ void setup()
         Serial.printf("send_cb, send done, status = %i\n", sendStatus);
     });
 
-    String msg = "test";
-    byte plain[msg.length()];
-    msg.getBytes(plain, msg.length());
+    interval = millis();
+    startup = millis();
+}
 
-    esp_now_send(NULL, plain, msg.length());
+void send_message(char *state)
+{
+    String json;
+    String payload;
+    char buff[200];
+
+    StaticJsonBuffer<200> jsonBuffer;    // max message length 200
+    StaticJsonBuffer<200> payloadBuffer; //...
+
+    JsonObject &payload_root = payloadBuffer.createObject(); // create json object for payload
+    JsonObject &root = jsonBuffer.createObject();            // create json object for root
+    payload_root["uptime"] = String(millis() - startup);     // stamp uptime
+    payload_root["state"] = state;
+    payload_root.printTo(payload);  // create payload string
+    root["topic"] = topic;          // set topic heartbeat
+    root["payload"] = payload;      // set payload
+    root.printTo(json);             // create result string
+    int length = json.length() + 1; // ??? why is the lenght to small?
+    json.toCharArray(buff, length); // create char array
+
+    Serial.print("len: #");
+    Serial.println(String(json.length()));
+    Serial.print("message #1: ");
+    Serial.println(buff);
+    Serial.print("message #2: ");
+    Serial.println(json);
+    byte plain[length];
+    json.getBytes(plain, length);
+    esp_now_send(NULL, plain, length);
 }
 
 void loop()
 {
+    if (millis() - interval > 5000)
+    {
+        send_message("TEST");
+        interval = millis();
+    }
 }
