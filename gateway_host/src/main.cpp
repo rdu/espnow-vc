@@ -14,7 +14,7 @@ uint8_t mac[] = {0x36, 0x11, 0x22, 0x33, 0x44, 0x55}; // AP mac address
 #define self_addr 0x30            //own address
 uint8_t bus_id[4] = {0, 0, 1, 5}; // pjon bus id
 
-PJON<SoftwareBitBang> bus(self_addr); // bus mode
+PJON<SoftwareBitBang> bus(bus_id, self_addr); // bus mode
 
 void initVariant()
 {
