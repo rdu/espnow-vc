@@ -7,13 +7,15 @@
 #include <PJON.h>
 
 #define bus_pin 4                                        // pin for the bus
-#define hb_interval 2000                                 // heartbeat interval
+#define hb_interval 60000                                // heartbeat interval
 uint8_t mac[] = {0x36, 0x11, 0x22, 0x33, 0x44, 0x55};    // AP mac address
 uint8_t c_mac1[] = {0x36, 0x11, 0x22, 0x33, 0x44, 0x56}; // Client 1 mac address
 
 #define target_addr 0x31          // target address
 #define self_addr 0x30            //own address
 uint8_t bus_id[4] = {0, 0, 1, 5}; // pjon bus id
+
+bool starting = true;
 
 #define WIFI_CHANNEL 1
 
@@ -62,6 +64,7 @@ void setup()
 }
 
 int heartBeat;
+int startBeat;
 
 void send_heartbeat()
 {
@@ -78,7 +81,7 @@ void send_heartbeat()
   JsonObject &root = jsonBuffer.createObject();            // create json object for root
   payload_root["uptime"] = String(millis() - startup);     // stamp uptime
   payload_root.printTo(payload);                           // create payload string
-  root["topic"] = "epsnowgateway/heartbeat";               // set topic heartbeat
+  root["topic"] = "espnowgateway/heartbeat";               // set topic heartbeat
   root["payload"] = payload;                               // set payload
   root.printTo(json);                                      // create result string
   int length = json.length() + 1;                          // ??? why is the lenght to small?
@@ -100,6 +103,12 @@ void loop()
     if (millis() - heartBeat > hb_interval) // send a heartbeat message
     {
       heartBeat = millis();
+      send_heartbeat();
+      starting = false;
+    }
+    if (starting && millis() - startBeat > 1000)
+    {
+      startBeat = millis();
       send_heartbeat();
     }
   }

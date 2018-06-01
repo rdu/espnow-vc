@@ -3,7 +3,7 @@
 #include <espnow.h>
 #include "user_interface.h"
 
-#define topic "esp_test/state"
+#define topic "esp_test_new/state"
 
 uint8_t local_mac[] = {0x36, 0x11, 0x22, 0x33, 0x44, 0x56};
 uint8_t remoteMac[] = {0x36, 0x11, 0x22, 0x33, 0x44, 0x55};
@@ -21,7 +21,10 @@ void initVariant()
 
 void setup()
 {
-    Serial.begin(115200);
+    Serial.begin(74880);
+
+    pinMode(2, OUTPUT);   // set led pin to output
+    digitalWrite(2, LOW); // drive it low
 
     WiFi.mode(WIFI_STA);
     WiFi.disconnect();
@@ -40,6 +43,7 @@ void setup()
 
     esp_now_register_send_cb([](uint8_t *mac, uint8_t sendStatus) {
         Serial.printf("send_cb, send done, status = %i\n", sendStatus);
+        digitalWrite(2, LOW);
     });
 
     interval = millis();
@@ -81,6 +85,7 @@ void loop()
 {
     if (millis() - interval > 5000)
     {
+        digitalWrite(2, HIGH);
         send_message("TEST");
         interval = millis();
     }

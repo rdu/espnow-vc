@@ -65,14 +65,17 @@ void setup_wifi()
 
 void setup()
 {
+  delay(100);
+  Serial.begin(74880); // start serial for debugging
+  delay(100);
+  Serial.println("init serial done");
+
   pinMode(2, OUTPUT);   // set led pin to output
   digitalWrite(2, LOW); // drive it low
 
   bus.strategy.set_pin(bus_pin);       // set pin for bus communication
   bus.begin();                         // start bus communication
   bus.set_receiver(receiver_function); // define receiver function
-
-  Serial.begin(74880); // start serial for debugging
 
   setup_wifi();                                     // setup wifi
   client.setServer(esp_mqtt_server, esp_mqtt_port); // set mqtt server
